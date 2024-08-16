@@ -4,7 +4,7 @@ import { request } from "express"
 
 //   this is what we calling the functiion using promises
 
-const assyncHanler = (requestHandler) =>{
+const assyncHandler = (requestHandler) =>{
     (req,res, next) => {
         Promise.resolve(requestHandler(req,res, next)).
         catch((err) => next(err))
@@ -25,4 +25,5 @@ const assyncHanler = (requestHandler) =>{
 //         message:err.message
 //      })
 //  }    
+
 // }
