@@ -1,3 +1,3 @@
-export const DB_NAME = "yoiutest" 
+export const DB_NAME = "viviswat" 
 
 
