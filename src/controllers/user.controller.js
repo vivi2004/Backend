@@ -172,9 +172,94 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     }
 });
 
+
+const changePassword = asyncHandler(async (req,res) => {
+   const { oldPassword, newPassword} =  req.body 
+    
+   const   user = await   User.findById(req.user?.id)
+  const isPasswordCorrect = await   user.isPasswordCorrect(oldPassword)
+
+  if(!isPasswordCorrect) {
+    throw new apiError (400 ," Invalid old password");
+     
+  }   
+   user.password = newPassword
+
+
+   await user.save({ validateBeforeSave: false });
+    return res
+    .status(200)
+    .json(new apiResponse(200, {}, "Password changed successfully"))
+ })
+ const getCurrentUser =  asyncHandler(async (req, res)=>{
+      return res
+      .status(200)
+      .json(200, req.user, "Current user fetched successfully") 
+ })
+
+const updateAccountDetails = asyncHandler( async(req,res) => {
+     const  { fullName,email}   = req.body
+     if(!fullName ||!email) {
+        throw new apiError (400, "All fields are required")
+     }
+//  information to  find and ,update fullName and email 
+   const user =  User.findByIdAndUpdate(
+        req.user?.id,
+       {
+        // its function  mongodb to store  the value.
+   $set: {
+        fullName,
+        email,
+        // email:email   we can define these values in both ways it is correct 
+        }
+
+        }
+       ,
+       {new: true } , // it is basically after update value is saved and showed to use...
+     ).select("-password")
+
+     return res
+    .status(200)
+    .json(new apiResponse (200 , user, "Account details updated successfully" ))
+
+})
+ 
+    const updateUserAvatar  =  asyncHandler(async(req, res) => {
+        const avatarLocalPath =  req.file?.path
+
+        if(!avatarLocalPath) {
+            throw new apiError(400, "Avatar is missing ")   
+        }
+     
+     const avatar = await  uploadOnCloudinary (avatarLocalPath) 
+        
+      if(!avatar.url) {
+        throw new apiError (400, "Error while uploading  on avatar")
+
+      }
+     // updating the avatar   
+         await User.findByIdAndUpdate(
+            { 
+            $set: {
+              avatar:avatar.url     
+             }
+            } ,
+            {new: true}
+         ).select("-password")
+
+
+    })
 export {
     registerUser,
     loginUser,
     logOutUser,
     refreshAccessToken ,
+    changePassword ,
+    getCurrentUser,
+    updateAccountDetails,
+    updateUserAvatar, 
+
 };
+
+
+
