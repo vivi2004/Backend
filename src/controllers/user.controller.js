@@ -6,6 +6,7 @@ import { apiResponse } from "../utils/apiResponse.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { response } from "express";
+import mongoose from "mongoose";
 
 const generateAccessAndRefreshToken = async (userId) => {
     try {
@@ -284,8 +285,7 @@ const updateCoverImage = asyncHandler(async (req, res) => {
         .status(200)
         .json(
             new apiResponse(200, user, "Cover Image updated sucessfully ");
-     )
-
+     
     })
 
 // For watch History   from  one copy from modal to another ...  ..
@@ -305,7 +305,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
 
         {
             $lookup: {
-                from: "subscription",   // The collection to join sunsriptions
+                from: "subscriptions",   // The collection to join sunsriptions
                 localField: "_id",   //  The field in subsription to  match
                 foreignField: "channel",  // from where should we matched to get the subscription model...
                 as: "subcribers"   //  or What we called  our  as  subscribers.
@@ -315,7 +315,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         {
             /// <important>   for pipeline wala part  its mentioned that  it shoul be in lower case
             $lookup: {
-                from: "subscription",   // The collection to join sunsriptions
+                from: "subscriptions",   // The collection to join sunsriptions
                 localField: "_id",   //  The field in subsription to  match
                 foreignField: "subscriber",  // for calculating    to whom we subscribed  we have to  match the foreingField to subsrbier.
                 as: "subcribedTO"
@@ -354,16 +354,62 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         }
 
     ])
-    if(!channel?.length) {
-        throw new apiError( 404, "channel does not exist");
+    if (!channel?.length) {
+        throw new apiError(404, "channel does not exist");
     }
 
-    return  res 
+    return res
+        .status(200)
+        .json(
+            new apiResponse(200, channel[0], " User channel fetched")
+        )
+})
+
+const getWatchHistory = asyncHandler(async (req, res) => {
+    const user = await User.aggregate([
+
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(req.user._id)   //  convert the id  for the pipelines in mongoose..
+
+            }
+        },
+        {
+            $lookup: {
+                from: "Video",
+                localField: "watchHistory",
+                localField: "_id",
+                foreignField: "_id",
+                as: "watchHistory",
+                pipeline: {
+                    $lookup: {
+                        from: "users",
+                        localField: "owner",
+                        foreignField: "_id",
+                        as: "owner",
+                        pipeline: {
+                            $project: {
+                                fullName: 1,
+                                username: 1,
+                                avatar: 1
+
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+    ])
+})
+
+ return res 
     .status(200)
     .json(
-        new apiResponse(200, channel[0] ," User channel fetched") 
+        new apiResponse(200, User[0].watchHistory, " Watch history  fetched successfully ")
     )
-})
+
+    
 export {
     registerUser,
     loginUser,
@@ -374,8 +420,8 @@ export {
     updateAccountDetails,
     updateUserAvatar,
     updateCoverImage,
-
-
+    getUserChannelProfile,
+    getWatchHistory,
 };
 
 
