@@ -285,8 +285,8 @@ const updateCoverImage = asyncHandler(async (req, res) => {
         .status(200)
         .json(
             new apiResponse(200, user, "Cover Image updated sucessfully ");
-     
-    })
+
+})
 
 // For watch History   from  one copy from modal to another ...  ..
 const getUserChannelProfile = asyncHandler(async (req, res) => {
@@ -403,13 +403,13 @@ const getWatchHistory = asyncHandler(async (req, res) => {
     ])
 })
 
- return res 
+return res
     .status(200)
     .json(
         new apiResponse(200, User[0].watchHistory, " Watch history  fetched successfully ")
     )
 
-    
+
 export {
     registerUser,
     loginUser,
