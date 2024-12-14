@@ -1,4 +1,5 @@
 import { Router } from "express";
+
 import {
   getLikedVideos,
   toggleCommentLike,
@@ -8,7 +9,7 @@ import {
 
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
-const router = Route();
+const router = Router();
 router.use(verifyJWT);
 
 router.route("/toogle/v/:videoId").post(toggleVideoLike);

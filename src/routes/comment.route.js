@@ -5,7 +5,7 @@ import {
   getVideoComments,
   updateComment,
 } from "../controllers/comment.controller.js";
-import { verifyJWT } from "jsonwebtoken";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 

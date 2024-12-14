@@ -1,25 +1,26 @@
 class apiError extends Error {
-     constructor (
-        statusCode,
-        message =  " something went wrong !!",
-       errors = [], 
-       stack = "" 
-     ) {
-        super(message)
-        this.statusCode = statusCode
-        this.data = null
-        this.message =  message
-        this.success = false,
-        this.errors = errors
-  
-      if(stack) {
-        this.statck = stack
-      } else {
-         Error.captureStackTrace(this,this.constructor )
-      }
+  constructor(
+    statusCode,
+    message = " something went wrong !!",
+    errors = [],
+    stack = ""
+  ) {
+    super(message);
+    this.statusCode = statusCode;
+    this.data = null;
+    this.message = message;
+    this.success = false;
+    this.errors = errors;
 
-      
-     }
+    if (stack) {
+      this.stack = stack;
+    } else {
+      Error.captureStackTrace(this, this.constructor);
+    }
+  }
+  static badReequest(message = "Internal Server  Error", errors = []) {
+    return new apiError(500, message, errors);
+  }
 }
 
-export {apiError}
+export { apiError };
