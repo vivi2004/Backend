@@ -6,8 +6,6 @@ import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 const createTweet = asyncHandler(async (req, res) => {
-
-
   const { content } = req.body;
   // Ensure  that the content is provided..
   if (!content) {
@@ -19,60 +17,74 @@ const createTweet = asyncHandler(async (req, res) => {
 
   const tweet = await Tweet.create({
     content,
-    user: userId,
+    owner: userId,
   });
   res.status(200).json(new apiResponse(200, {}, "Tweet created successfully "));
 });
 
 const getUserTweets = asyncHandler(async (req, res) => {
-  //TODO: get user tweents
-  //     Get the user ID from the request params or  authenticated user..
+  // Get the user ID from params or authenticated user
   const userId = req.params.userId || req.user._id;
-  // find the users tweets..
-  const tweets = await Tweet.find({ user: userId });
 
-  if (!tweets || tweets.length == 0) {
-    throw new apiError(404, "Tweet  not found for the user");
+  // Validate the userId as a valid ObjectId
+  if (!mongoose.isValidObjectId(userId)) {
+    throw new apiError(400, "Invalid user ID");
   }
+
+  // Query tweets based on the user ID
+  const tweets = await Tweet.find({ owner: userId });
+
+  if (!tweets || tweets.length === 0) {
+    throw new apiError(404, "No tweets found for the user");
+  }
+
   res
     .status(200)
-    .json(new apiResponse(200, {}, "User tweets retrieved successfully"));
+    .json(new apiResponse(200, tweets, "User tweets retrieved successfully"));
 });
 
 const updateTweet = asyncHandler(async (req, res) => {
-  //TOdo: update tweet..
-  const { tweetId } = req.params; // get tweet ID  from the request paramete.
-  const { content } = req.body; // get new tweet content form the request body..
-  // check if the content is provided ..
+  const { tweetId } = req.params;
+  const { content } = req.body;
+
   if (!content) {
-    throw new apiError(400, "Tweet content is not  provided");
+    throw new apiError(400, "Tweet content is not provided");
   }
 
-  // Find the tweet by ID
   const tweet = await Tweet.findById(tweetId);
-  // chec if the tweet exist.
+
   if (!tweet) {
-    throw new apiError(404, "Tweet not found ");
+    throw new apiError(404, `Tweet with ID ${tweetId} not found`);
   }
-  // check if the logged - in use is the  owner of the  tweet..
-  if (tweet.user.toString() !== req.user._id.toString()) {
-    throw new apiError(403, "You are not authorized to this tweet");
+
+  console.log("Tweet user:", tweet.owner);
+  console.log("Logged-in user:", req.user);
+  console.log("Logged-in user ID:", req.user ? req.user._id : "No user ID");
+
+  if (!tweet.owner || !req.user || !req.user._id) {
+    throw new apiError(400, "Invalid user or tweet data");
   }
-  // update the tweet  content ..
+
+  if (tweet.owner.toString() !== req.user._id.toString()) {
+    throw new apiError(403, "You are not authorized to update this tweet");
+  }
+
   tweet.content = content;
-  //  save the updated tweet
-  const updateTweet = await tweet.save();
+  await tweet.save();
+
   res.status(200).json(new apiResponse(200, {}, "Tweet updated successfully"));
 });
 
 const deleteTweet = asyncHandler(async (req, res) => {
   // delete a tweet..
+
   const { tweetId } = req.params; // get tweet ID  from the request paramete.
-  if(!isValidObjectId(tweetId)) {
-     throw new apiError(404 , "Invalid Tweet ID");
-  }   
-    
-   
+  // validate the tweet Id
+
+  if (!isValidObjectId(tweetId)) {
+    throw new apiError(404, "Invalid Tweet ID");
+  }
+
   // Find the tweet by ID
   const tweet = await Tweet.findById(tweetId);
   // chec if the tweet exist.
@@ -80,13 +92,13 @@ const deleteTweet = asyncHandler(async (req, res) => {
     throw new apiError(404, "Tweet not found ");
   }
   // check if the logged - in use is the  owner of the  tweet..
-  if (tweet.user.toString() !== req.user._id.toString()) {
+  if (tweet.owner.toString() !== req.user._id.toString()) {
     throw new apiError(403, "You are not authorized to delete this tweet");
   }
   //  Delete the tweet..
-  const deleteTweet = await tweet.deleteOne();
+  await tweet.deleteOne();
 
-  res.status(200).json(new apiResponse( 200, {deleteTweet}, "Tweet deleted successfully "));
+  res.status(200).json(new apiResponse(200, {}, "Tweet deleted successfully "));
 });
 
 export { createTweet, getUserTweets, updateTweet, deleteTweet };
